@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Markdown Editor</title>
+  <style>
+    body {
+      display: flex;
+      height: 100vh;
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
+    textarea, .output {
+      width: 50%;
+      height: 100%;
+      padding: 10px;
+      box-sizing: border-box;
+      border: none;
+      outline: none;
+    }
+    textarea {
+      resize: none;
+      font-size: 16px;
+    }
+    .output {
+      background-color: #f4f4f4;
+      overflow-y: auto;
+      position: relative;
+    }
+    .buttons {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      display: flex;
+      gap: 10px;
+    }
+    button {
+      padding: 5px 10px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+<textarea id="markdown" placeholder="Type your Markdown here..."></textarea>
+<div class="output" id="preview">
+  <div class="buttons">
+    <button id="copy">Copy</button>
+    <button id="export">Export</button>
+  </div>
+  <div id="rendered"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.4.0/purify.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+  const markdownInput = document.getElementById('markdown');
+  const previewOutput = document.getElementById('rendered');
+  const copyButton = document.getElementById('copy');
+  const exportButton = document.getElementById('export');
+
+  // Real-time Markdown rendering
+  markdownInput.addEventListener('input', () => {
+    const markdownText = markdownInput.value;
+    previewOutput.innerHTML = markdownText
+      .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+      .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+      .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+      .replace(/\*\*(.*)\*\*/gim, '<b>$1</b>')
+      .replace(/\*(.*)\*/gim, '<i>$1</i>')
+      .replace(/`(.*?)`/gim, '<code>$1</code>')
+      .replace(/\n/gim, '<br>');
+  });
+
+  // Copy rendered HTML to clipboard
+  copyButton.addEventListener('click', () => {
+    const tempElement = document.createElement('textarea');
+    tempElement.value = previewOutput.innerHTML;
+    document.body.appendChild(tempElement);
+    tempElement.select();
+    document.execCommand('copy');
+    document.body.removeChild(tempElement);
+    alert('Rich text copied to clipboard!');
+  });
+
+  // Export rendered HTML as PDF
+  exportButton.addEventListener('click', () => {
+    const { jsPDF } = window.jspdf;
+    const pdfContent = previewOutput.innerHTML;
+    const doc = new jsPDF();
+    doc.html(pdfContent, {
+      callback: function (doc) {
+        doc.save('markdown-rendered.pdf');
+      },
+      x: 10,
+      y: 10,
+    });
+  });
+</script>
+</body>
+</html>
